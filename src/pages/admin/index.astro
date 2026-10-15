@@ -4,6 +4,7 @@ import { getCollection } from 'astro:content';
 import { profile } from '../../data/profile';
 import { renderAdmin } from '../../lib/admin';
 import { adminPassword, seal } from '../../lib/vault';
+import SiteMeta from '../../components/SiteMeta.astro';
 
 const payload = await seal(
   renderAdmin({
@@ -21,6 +22,7 @@ const payload = await seal(
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <title>管理画面 - yanikawa</title>
+    <SiteMeta title="管理画面" description="" ogp={false} />
   </head>
   <body>
     <div id="app">

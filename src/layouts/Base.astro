@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import Lock from '../components/Lock.astro';
+import SiteMeta from '../components/SiteMeta.astro';
 import { SITE, NAV } from '../site.config';
 
 interface Props {
@@ -21,7 +22,7 @@ const path = Astro.url.pathname;
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <SiteMeta title={pageTitle} description={description} ogp={!noindex} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
