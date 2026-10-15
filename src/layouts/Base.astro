@@ -25,17 +25,79 @@ const path = Astro.url.pathname;
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Shippori+Mincho+B1:wght@400;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Shippori+Mincho+B1:wght@400;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Kurenaido&display=swap"
       rel="stylesheet"
     />
-    <script is:inline>document.documentElement.classList.add('js');</script>
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      // 扉から入ってきた最初の1回だけ、明るい状態から停電させる（?replay で何度でも）
+      try {
+        var q = new URLSearchParams(location.search);
+        // ?reset で、すべてのフラグと演出の記録を消して最初からにする
+        if (q.has('reset')) {
+          Object.keys(localStorage)
+            .filter(function (k) { return k.indexOf('yanikawa-') === 0; })
+            .forEach(function (k) { localStorage.removeItem(k); });
+          sessionStorage.clear();
+          history.replaceState(null, '', location.pathname);
+        }
+        var root = document.documentElement;
+        if (localStorage.getItem('yanikawa-flag:clear')) {
+          // クリア後の世界：懐中電灯もフラグもない、明るいサイト
+          root.classList.add('flag-clear');
+        } else {
+          var first = q.has('from') && !localStorage.getItem('yanikawa-lights-out');
+          if ((first || q.has('replay')) && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            root.classList.add('intro');
+          }
+          // 懐中電灯を消したままページを移ったら、消えたまま
+          if (sessionStorage.getItem('yanikawa-light-off')) root.classList.add('lights-off');
+          // 立っているフラグを html に付けておく（data-flag の中身が見えるようになる）
+          if (localStorage.getItem('yanikawa-flag:request')) root.classList.add('flag-request');
+          // 管理画面で「詳細」を押したあとは、サイトが侵食されている
+          if (localStorage.getItem('yanikawa-flag:goo')) root.classList.add('flag-goo');
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
-    <div class="lamp" aria-hidden="true"></div>
+    <div class="torch" aria-hidden="true"></div>
+    <div class="blackout" aria-hidden="true"></div>
+    <button type="button" class="flashlight" aria-pressed="true" aria-label="懐中電灯を消す">
+      <svg viewBox="0 0 120 120" width="96" height="96" overflow="visible" aria-hidden="true">
+        <defs>
+          <linearGradient id="fl-body" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#5a4f45" />
+            <stop offset=".45" stop-color="#2c2520" />
+            <stop offset="1" stop-color="#161210" />
+          </linearGradient>
+          <linearGradient id="fl-beam" x1="1" y1="0" x2="0" y2="0">
+            <stop offset="0" stop-color="#ffe2a8" stop-opacity=".35" />
+            <stop offset="1" stop-color="#ffe2a8" stop-opacity="0" />
+          </linearGradient>
+          <radialGradient id="fl-lens" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#fffaf0" />
+            <stop offset=".6" stop-color="#ffd98a" />
+            <stop offset="1" stop-color="#e8a24a" />
+          </radialGradient>
+        </defs>
+        <!-- 左上（画面の中心）を照らすように傾けた懐中電灯 -->
+        <g transform="rotate(38 60 60)">
+          <polygon class="beam" points="18,52 -60,22 -60,98 18,68" fill="url(#fl-beam)" />
+          <rect x="44" y="49" width="62" height="22" rx="5" fill="url(#fl-body)" stroke="#0c0a08" />
+          <rect x="74" y="49" width="2.5" height="22" fill="#0c0a08" opacity=".6" />
+          <rect x="81" y="49" width="2.5" height="22" fill="#0c0a08" opacity=".6" />
+          <rect x="88" y="49" width="2.5" height="22" fill="#0c0a08" opacity=".6" />
+          <rect x="56" y="45.5" width="10" height="5" rx="1.5" fill="#d1a85a" />
+          <path d="M44 49 L26 42 Q20 60 26 78 L44 71 Z" fill="url(#fl-body)" stroke="#0c0a08" />
+          <ellipse class="lens" cx="23" cy="60" rx="5" ry="18" fill="url(#fl-lens)" />
+        </g>
+      </svg>
+    </button>
 
     <header class="site-header">
       <div class="container bar">
-        <a href="/" class="wordmark">{SITE.title}</a>
+        <a href="/home/" class="wordmark">{SITE.title}</a>
         <nav aria-label="メニュー">
           {NAV.map((n) => (
             <a href={n.href} aria-current={path.startsWith(n.href) ? 'page' : undefined}>{n.label}</a>
@@ -54,7 +116,6 @@ const path = Astro.url.pathname;
         <div class="foot">
           <p class="copy">
             © {new Date().getFullYear()} {SITE.author}
-            <a class="ember" href="/drawer/" data-drawer aria-label="引き出し"></a>
           </p>
           <p class="links">
             {SITE.links.map((l) => <a href={l.href} target="_blank" rel="noopener">{l.label}</a>)}
@@ -66,15 +127,133 @@ const path = Astro.url.pathname;
     <Lock />
 
     <script>
-      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      const lamp = document.querySelector<HTMLElement>('.lamp');
-      if (lamp && !reduce) {
-        addEventListener('pointermove', (e) => {
-          lamp.style.setProperty('--mx', `${e.clientX}px`);
-          lamp.style.setProperty('--my', `${e.clientY}px`);
-        });
+      // 懐中電灯：マウス・指・キーボードで選んだ場所を照らす
+      const torch = document.querySelector<HTMLElement>('.torch')!;
+      let last = { x: innerWidth / 2, y: innerHeight * 0.4 };
+      const aim = (x: number, y: number) => {
+        last = { x, y };
+        torch.style.setProperty('--mx', `${x}px`);
+        torch.style.setProperty('--my', `${y}px`);
+      };
+      addEventListener('pointermove', (e) => aim(e.clientX, e.clientY), { passive: true });
+      addEventListener('pointerdown', (e) => aim(e.clientX, e.clientY), { passive: true });
+      // 停電：ぷつぷつ点滅して真っ暗 → 手元の灯りだけが残る
+      const root = document.documentElement;
+      const blackout = document.querySelector<HTMLElement>('.blackout')!;
+      if (root.classList.contains('intro')) {
+        setTimeout(() => blackout.classList.add('is-flickering'), 1400);
+        blackout.addEventListener(
+          'animationend',
+          () => {
+            blackout.style.opacity = '1';
+            blackout.classList.remove('is-flickering');
+            root.classList.remove('intro');
+            void blackout.offsetWidth;
+            blackout.style.transition = 'opacity 1.6s ease .5s';
+            blackout.style.opacity = '0';
+            try {
+              localStorage.setItem('yanikawa-lights-out', '1');
+            } catch {}
+            history.replaceState(null, '', location.pathname);
+          },
+          { once: true },
+        );
       }
+
+      // 懐中電灯のスイッチ。いつでも消せる
+      const flashlight = document.querySelector<HTMLButtonElement>('.flashlight')!;
+      const setLight = (on: boolean) => {
+        root.classList.toggle('lights-off', !on);
+        flashlight.setAttribute('aria-pressed', String(on));
+        flashlight.setAttribute('aria-label', on ? '懐中電灯を消す' : '懐中電灯をつける');
+        dispatchEvent(new CustomEvent('yanikawa:light', { detail: on }));
+        try {
+          if (on) sessionStorage.removeItem('yanikawa-light-off');
+          else sessionStorage.setItem('yanikawa-light-off', '1');
+        } catch {}
+      };
+      setLight(!root.classList.contains('lights-off'));
+
+      // data-read の場所を照らしてしばらく読んだあとに懐中電灯を触ると、フラグが立つ
+      const read = new Set<string>();
+      const dwell = new Map<HTMLElement, number>();
+      const watched = [...document.querySelectorAll<HTMLElement>('[data-read]')];
+      if (watched.length) {
+        setInterval(() => {
+          if (root.classList.contains('lights-off') || root.classList.contains('intro')) return;
+          for (const el of watched) {
+            const r = el.getBoundingClientRect();
+            const inside = last.x >= r.left && last.x <= r.right && last.y >= r.top - 24 && last.y <= r.bottom + 24;
+            const ms = inside ? (dwell.get(el) ?? 0) + 200 : 0;
+            dwell.set(el, ms);
+            if (ms >= 800) read.add(el.dataset.read!);
+          }
+        }, 200);
+      }
+
+      flashlight.addEventListener('click', () => {
+        for (const flag of read) {
+          try {
+            localStorage.setItem(`yanikawa-flag:${flag}`, '1');
+          } catch {}
+          root.classList.add(`flag-${flag}`);
+          dispatchEvent(new CustomEvent('yanikawa:flag', { detail: flag }));
+        }
+        read.clear();
+        setLight(root.classList.contains('lights-off'));
+      });
+
+      // 侵食：自動生成の日記が増え、文字が少しずつ書き換わっていく
+      if (root.classList.contains('flag-goo')) {
+        // 侵食されたあとに開いたページを覚えておく（自己紹介と日記を見ると、元に戻すボタンが出る）
+        try {
+          if (location.pathname.startsWith('/about/')) localStorage.setItem('yanikawa-goo-seen:about', '1');
+          if (location.pathname.startsWith('/diary/')) localStorage.setItem('yanikawa-goo-seen:diary', '1');
+        } catch {}
+        const GLYPHS = 'yanikawa■□▒01複製';
+        const pick = <T,>(list: ArrayLike<T>) => list[Math.floor(Math.random() * list.length)];
+
+        document.querySelectorAll<HTMLElement>('.entries').forEach((list) => {
+          const first = list.querySelector('li');
+          if (!first) return;
+          for (let i = 0; i < 18; i++) {
+            const copy = first.cloneNode(true) as HTMLElement;
+            copy.removeAttribute('data-flag');
+            const title = copy.querySelector('.t');
+            if (title) title.textContent = `${title.textContent}（複製 #${Math.floor(Math.random() * 99999)}）`;
+            const ex = copy.querySelector('.ex');
+            if (ex) ex.textContent = 'こちらで書いておきます。'.repeat(1 + (i % 4));
+            list.prepend(copy);
+          }
+        });
+        const wordmark = document.querySelector('.wordmark');
+        if (wordmark) wordmark.textContent = 'yanikawayanikawayanika';
+        document.querySelectorAll('.copy').forEach((el) => (el.textContent = '© 2026–∞ yanikawa (bot)'));
+        document.title = 'yanikawa yanikawa yanikawa yanikawa';
+
+        const main = document.querySelector('main')!;
+        let changes = 0;
+        const erode = setInterval(() => {
+          const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT);
+          const nodes: Text[] = [];
+          while (walker.nextNode()) {
+            const node = walker.currentNode as Text;
+            // data-keep の中（元に戻すボタンやクリア画面）は壊さない
+            if (node.data.trim() && !node.parentElement?.closest('[data-keep]')) nodes.push(node);
+          }
+          if (!nodes.length || ++changes > 900 || !root.classList.contains('flag-goo')) return clearInterval(erode);
+          const node = pick(nodes);
+          const at = Math.floor(Math.random() * node.data.length);
+          node.data = node.data.slice(0, at) + pick(GLYPHS) + node.data.slice(at + 1);
+        }, 120);
+      }
+
+      addEventListener('focusin', (e) => {
+        const target = e.target as Element;
+        if (!(target instanceof HTMLElement) || target.closest('#lock') || target === flashlight) return;
+        const r = target.getBoundingClientRect();
+        aim(r.left + r.width / 2, r.top + r.height / 2);
+      });
 
       const io = new IntersectionObserver(
         (entries) => {

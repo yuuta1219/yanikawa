@@ -13,25 +13,34 @@ export async function getStaticPaths() {
 
 const { entry, newer, older } = Astro.props;
 const { Content } = await render(entry);
-const { title, date, weather } = entry.data;
+const { title, date, weather, flag } = entry.data;
 ---
 <Base title={title}>
   <div class="read">
-    <article>
-      <header class="entry-head">
-        <p class="date">
-          {formatDateJa(date)}
-          {weather && <span class="weather">{weather}</span>}
-        </p>
-        <h1>{title}</h1>
-      </header>
-      <div class="prose"><Content /></div>
-    </article>
-    <nav class="pager">
-      {older ? <a href={`/diary/${older.id}/`}>← {older.data.title}</a> : <span />}
-      <a href="/diary/">一覧へ</a>
-      {newer ? <a href={`/diary/${newer.id}/`}>{newer.data.title} →</a> : <span />}
-    </nav>
+    <!-- フラグが立つまでは、このページは存在しないことになっている -->
+    {flag && (
+      <section class="missing" data-unflag={flag}>
+        <h1>ページが見つかりませんでした</h1>
+        <p><a href="/diary/">日記の一覧へ</a></p>
+      </section>
+    )}
+    <div data-flag={flag}>
+      <article>
+        <header class="entry-head">
+          <p class="date">
+            {formatDateJa(date)}
+            {weather && <span class="weather">{weather}</span>}
+          </p>
+          <h1>{title}</h1>
+        </header>
+        <div class="prose"><Content /></div>
+      </article>
+      <nav class="pager">
+        {older ? <a href={`/diary/${older.id}/`} data-flag={older.data.flag}>← {older.data.title}</a> : <span />}
+        <a href="/diary/">一覧へ</a>
+        {newer ? <a href={`/diary/${newer.id}/`} data-flag={newer.data.flag}>{newer.data.title} →</a> : <span />}
+      </nav>
+    </div>
   </div>
 </Base>
 
@@ -50,4 +59,7 @@ const { title, date, weather } = entry.data;
   }
   .weather { padding: 0 .55rem; border: 1px solid var(--line-strong); border-radius: 2px; font-size: .78rem; color: var(--muted); }
   h1 { margin: 0; font-size: clamp(1.7rem, 5vw, 2.3rem); color: var(--paper); }
+  .missing { min-height: 40vh; padding-top: 10vh; }
+  .missing h1 { font-size: 1.5rem; }
+  .missing p { font-family: var(--font-sans); }
 </style>

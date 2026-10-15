@@ -9,7 +9,7 @@ const { entries } = Astro.props;
 ---
 <ul class="entries">
   {entries.map((d) => (
-    <li>
+    <li data-flag={d.data.flag}>
       <a href={`/diary/${d.id}/`}>
         <span class="when">
           <span class="md">{formatMonthDay(d.data.date)}</span>

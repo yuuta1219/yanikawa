@@ -6,8 +6,8 @@ export const SITE = {
   intro: '日記と、つくったアプリと、自己紹介を置いています。',
   author: 'yanikawa',
   links: [
-    { label: 'GitHub', href: 'https://github.com/' },
-    { label: 'X', href: 'https://x.com/' },
+    { label: 'GitHub', href: 'https://github.com/yuuta1219' },
+    { label: 'X', href: 'https://x.com/yanikawa_runteq' },
   ],
 };
 

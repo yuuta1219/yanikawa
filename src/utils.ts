@@ -51,3 +51,7 @@ export function ticketNumbers<T extends { id: string; data: { date: Date } }>(it
 
 export const published = <T extends { data: { draft: boolean } }>(e: T) =>
   import.meta.env.DEV || !e.data.draft;
+
+// HTML を文字列で組み立てるとき用
+export const escapeHtml = (s: string) =>
+  s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);

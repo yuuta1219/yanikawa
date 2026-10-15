@@ -21,6 +21,7 @@
   --font-serif: 'Shippori Mincho B1', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
   --font-sans: 'Zen Kaku Gothic New', system-ui, -apple-system, 'Hiragino Sans', sans-serif;
   --font-latin: 'Cormorant Garamond', 'Shippori Mincho B1', serif;
+  --font-hand: 'Zen Kurenaido', 'Shippori Mincho B1', serif;
   color-scheme: dark;
 }
 
@@ -63,13 +64,110 @@ body::after {
   background: radial-gradient(ellipse at 50% 35%, transparent 50%, rgba(0, 0, 0, 0.5) 100%);
 }
 
-/* カーソルのまわりだけ、ランプに照らされたように明るい */
-.lamp {
+/* 懐中電灯：照らしたまわりだけ見えて、それ以外は真っ暗（JS が動くときだけ） */
+.torch { display: none; }
+.js .torch {
+  display: block;
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: 90;
   pointer-events: none;
-  background: radial-gradient(360px circle at var(--mx, 12%) var(--my, 8%), rgba(209, 168, 90, 0.06), transparent 70%);
+  background: radial-gradient(
+    var(--r, 300px) circle at var(--mx, 50%) var(--my, 40%),
+    rgba(255, 214, 150, 0.05) 0%,
+    transparent 40%,
+    rgba(4, 3, 2, 0.55) 66%,
+    rgba(4, 3, 2, 0.93) 85%,
+    #040302 100%
+  );
+}
+@media (max-width: 560px) {
+  .js .torch { --r: 195px; }
+}
+/* 驚かせる瞬間：光の輪が一気に広がって、ガタガタ揺れながらちらつく */
+.scare .torch {
+  --r: 620px;
+  inset: -40px;
+  animation: torch-jolt .11s steps(1) infinite, torch-flicker .7s steps(1) infinite;
+}
+@keyframes torch-jolt {
+  0% { transform: translate(-9px, 6px); }
+  25% { transform: translate(8px, -7px); }
+  50% { transform: translate(-5px, -4px); }
+  75% { transform: translate(7px, 5px); }
+}
+@keyframes torch-flicker {
+  0%, 30%, 55%, 100% { opacity: 1; }
+  20% { opacity: .55; }
+  45% { opacity: .8; }
+  80% { opacity: .4; }
+}
+@media (max-width: 560px) {
+  .scare .torch { --r: 420px; }
+}
+
+/* 停電の演出中は、まだ明るいまま */
+.intro .torch { opacity: 0; }
+
+/* 右下にいつもある懐中電灯（灯りがともってから現れる） */
+.flashlight { display: none; }
+.js .flashlight {
+  display: block;
+  position: fixed;
+  right: clamp(8px, 2vw, 24px);
+  bottom: clamp(8px, 2vw, 20px);
+  z-index: 96;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6));
+  transition: opacity 1.2s ease 1.6s, transform .2s;
+}
+.flashlight:hover { transform: scale(1.05); }
+.flashlight:focus-visible { outline: 1px solid var(--gold); outline-offset: 2px; border-radius: 50%; }
+.intro .flashlight { opacity: 0; pointer-events: none; transition: none; }
+.flashlight .lens { filter: drop-shadow(0 0 6px rgba(255, 210, 130, 0.9)); animation: lens-glow 3.5s ease-in-out infinite; }
+
+/* フラグ：data-flag はフラグが立つまで隠す / data-unflag は立ったら隠す */
+html:not(.flag-request) [data-flag='request'],
+html.flag-request [data-unflag='request'] { display: none !important; }
+
+/* 灯りを消すと、何も見えない */
+.lights-off .torch { background: #040302; }
+.lights-off .flashlight .beam { opacity: 0; }
+.lights-off .flashlight .lens { fill: #4a4038; filter: none; animation: none; }
+@keyframes lens-glow { 50% { opacity: .82; } }
+@media (max-width: 560px) {
+  .flashlight svg { width: 72px; height: 72px; }
+}
+
+.blackout {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  background: #040302;
+  opacity: 0;
+  pointer-events: none;
+}
+.blackout.is-flickering { animation: power-out 1.9s linear forwards; }
+@keyframes power-out {
+  0% { opacity: 0; }
+  6% { opacity: .85; }
+  8% { opacity: 0; }
+  20% { opacity: 0; }
+  22% { opacity: .9; }
+  25% { opacity: .15; }
+  28% { opacity: 1; }
+  31% { opacity: .1; }
+  44% { opacity: .1; }
+  46% { opacity: 1; }
+  51% { opacity: .35; }
+  54% { opacity: 1; }
+  70% { opacity: 1; }
+  72% { opacity: .55; }
+  74% { opacity: 1; }
+  100% { opacity: 1; }
 }
 
 a { color: var(--gold); text-decoration: none; transition: color .25s; }
@@ -254,3 +352,93 @@ a.ticket:hover { transform: translateY(-4px); box-shadow: 0 22px 40px rgba(0, 0,
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .js .reveal { opacity: 1; transform: none; }
 }
+
+/* 工事中：半券は押せず、黄色と黒のテープが貼ってある */
+.ticket.disabled { cursor: not-allowed; filter: grayscale(.55) brightness(.8); }
+.construction { position: relative; }
+.construction .sign {
+  position: absolute;
+  top: 50%;
+  left: -3%;
+  right: -3%;
+  z-index: 2;
+  margin: 0;
+  padding: .35rem 0;
+  transform: translateY(-50%) rotate(-4deg);
+  background: repeating-linear-gradient(-45deg, #e9c23a 0 22px, #1b1610 22px 44px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: .6em;
+  text-align: center;
+  color: #1b1610;
+}
+.construction .sign span { padding: .1rem .4rem .1rem 1rem; background: #e9c23a; }
+
+/* 侵食されたサイト：ときどき画面が裂けて、文字の色がずれる */
+.flag-goo main { animation: tear 7s steps(1) infinite; }
+.flag-goo h1,
+.flag-goo h2,
+.flag-goo .wordmark,
+.flag-goo .entries .t { text-shadow: 2px 0 rgba(255, 0, 60, 0.45), -2px 0 rgba(0, 190, 255, 0.4); }
+.flag-goo .wordmark { max-width: 60vw; overflow: hidden; white-space: nowrap; }
+.flag-goo .entries li:nth-child(3n) { transform: translateX(10px); }
+.flag-goo .entries li:nth-child(4n) { opacity: .55; }
+.flag-goo .entries li:nth-child(7n) { transform: translateX(-14px) skewX(-6deg); }
+@keyframes tear {
+  0%, 86%, 100% { transform: none; filter: none; }
+  87% { transform: translateX(-8px) skewX(-3deg); filter: hue-rotate(90deg) contrast(1.4); }
+  89% { transform: translateX(6px); }
+  91% { transform: translateY(-4px) skewX(4deg); filter: invert(.15); }
+  93% { transform: none; filter: none; }
+}
+
+/* ===== エンディング ===== */
+/* 光の輪の大きさをなめらかに変えられるように登録しておく */
+@property --r {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 300px;
+}
+/* 「すべてを元に戻す」を押すと、光がどこまでも広がっていく */
+.ending .torch { --r: 2600px !important; transition: --r 2.8s cubic-bezier(.6, 0, .9, .4); }
+
+.whiteout { position: fixed; inset: 0; z-index: 200; background: #fff; opacity: 0; pointer-events: none; transition: opacity 1.6s ease; }
+.whiteout.on { opacity: 1; }
+
+/* ===== クリア後の世界：懐中電灯はなく、紙のように明るい ===== */
+html:not(.flag-clear) [data-clear],
+html.flag-clear [data-unclear] { display: none !important; }
+
+html.flag-clear {
+  --bg: #f4ecdc;
+  --bg-2: #fbf6ea;
+  --text: #2b231c;
+  --muted: #6f604b;
+  --dim: #a3947c;
+  --line: rgba(43, 35, 28, 0.12);
+  --line-strong: rgba(43, 35, 28, 0.25);
+  --gold: #a8782a;
+  color-scheme: light;
+}
+html.flag-clear .torch,
+html.flag-clear .flashlight,
+html.flag-clear .blackout { display: none !important; }
+html.flag-clear body::after { display: none; }
+html.flag-clear body { background: radial-gradient(900px 600px at 10% -10%, rgba(255, 220, 140, 0.35), transparent 65%), linear-gradient(180deg, var(--bg-2), var(--bg) 60%); }
+html.flag-clear a:hover { color: var(--ink); }
+html.flag-clear h1,
+html.flag-clear h2,
+html.flag-clear .page-head h1,
+html.flag-clear .section-head h2,
+html.flag-clear .wordmark,
+html.flag-clear .verse,
+html.flag-clear .prose strong { color: var(--ink); }
+html.flag-clear .site-header { background: rgba(251, 246, 234, 0.9); }
+html.flag-clear .hero .wordmark { background: linear-gradient(175deg, #4a3826 30%, #a8782a 80%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: none; }
+html.flag-clear .ticket::before,
+html.flag-clear .ticket::after { background: var(--bg); }
+html.flag-clear .btn { color: #fff; }
+html.flag-clear .btn.ghost { color: var(--text); }

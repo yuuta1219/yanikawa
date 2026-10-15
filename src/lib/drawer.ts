@@ -1,13 +1,11 @@
 import type { CollectionEntry } from 'astro:content';
 import { SITE } from '../site.config';
-import { byDateDesc, formatDate, formatDateJa, kanjiNum } from '../utils';
+import { byDateDesc, escapeHtml as esc, formatDate, formatDateJa, kanjiNum } from '../utils';
 
 // 引き出し（小説）のページ本体を HTML の文字列で組み立てる。
 // これをまるごと暗号化して埋め込むので、タイトル一覧も番号なしでは見えない
 type Novel = CollectionEntry<'novels'>;
 
-const esc = (s: string) =>
-  s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 const href = (n: Novel) => `/drawer/${esc(n.id)}/`;
 const episode = (n: Novel) => (n.data.episode ? `第${kanjiNum(n.data.episode)}話` : '');
 

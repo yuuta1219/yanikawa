@@ -12,9 +12,12 @@ const apps = [...all].sort(byDateDesc);
   <header class="page-head">
     <p class="kicker">Works</p>
     <h1>アプリ</h1>
-    <p class="lead">つくったものたち。</p>
+    <p class="lead">ただいま工事中です。まだ触れません。</p>
   </header>
-  <div class="tickets reveal">
-    {apps.map((a) => <Ticket app={a} no={numbers.get(a.id)} tags />)}
+  <div class="construction reveal">
+    <p class="sign"><span>工事中</span></p>
+    <div class="tickets">
+      {apps.map((a) => <Ticket app={a} no={numbers.get(a.id)} tags disabled />)}
+    </div>
   </div>
 </Base>

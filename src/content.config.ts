@@ -20,6 +20,7 @@ const diary = defineCollection({
     title: z.string(),
     date: z.coerce.date(),
     weather: z.string().optional(), // 晴れ・雨 など
+    flag: z.string().optional(), // このフラグが立つまで出てこない（例: request）
     draft: z.boolean().default(false),
   }),
 });
@@ -38,4 +39,13 @@ const apps = defineCollection({
   }),
 });
 
-export const collections = { novels, diary, apps };
+// 管理画面にだけ出てくる下書き。公開ページにはどこにも出ない
+const drafts = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/drafts' }),
+  schema: z.object({
+    title: z.string(),
+    date: z.coerce.date(),
+  }),
+});
+
+export const collections = { novels, diary, apps, drafts };

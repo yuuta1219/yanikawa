@@ -6,13 +6,14 @@ import { byDateDesc, published } from '../../utils';
 
 const entries = (await getCollection('diary', published)).sort(byDateDesc);
 
-// 年月ごとにまとめる
+// 年月ごとにまとめる。中身がぜんぶフラグ待ちの月は、月ごと隠す
 const groups = new Map<string, typeof entries>();
 for (const e of entries) {
   const key = `${e.data.date.getFullYear()}年${e.data.date.getMonth() + 1}月`;
   if (!groups.has(key)) groups.set(key, []);
   groups.get(key)!.push(e);
 }
+const hiddenUntil = (list: typeof entries) => (list.every((e) => e.data.flag) ? list[0].data.flag : undefined);
 ---
 <Base title="日記" description="日々のこと">
   <header class="page-head">
@@ -22,10 +23,9 @@ for (const e of entries) {
   </header>
 
   {[...groups].map(([month, list]) => (
-    <section>
+    <section data-flag={hiddenUntil(list)}>
       <div class="section-head reveal">
         <h2>{month}</h2>
-        <span class="meta">{list.length}件</span>
       </div>
       <div class="reveal"><DiaryList entries={list} /></div>
     </section>

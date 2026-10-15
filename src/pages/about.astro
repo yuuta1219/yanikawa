@@ -1,24 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import { SITE } from '../site.config';
-import { formatDateJa } from '../utils';
-
-// ここを書き換えて、自分の履歴書にしてね
-const profile = {
-  kana: 'やにかわ',
-  name: SITE.author,
-  photo: '', // 写真を出すなら public/images/ に置いて '/images/me.jpg' のように書く
-  job: 'エンジニア',
-  location: '東京',
-  history: [
-    { year: 2024, month: 4, text: 'エンジニアとして働きはじめる' },
-    { year: 2026, month: 10, text: 'このサイトをひらく' },
-  ],
-  hobbies: '読書、夜の散歩、喫茶店めぐり',
-  likes: '古い映画、雨の音、濃いめのコーヒー',
-  skills: ['TypeScript', 'React', 'Ruby on Rails'],
-  note: 'お気軽にご連絡ください。',
-};
+import { profile } from '../data/profile';
 ---
 <Base title="自己紹介">
   <header class="page-head">
@@ -26,62 +9,211 @@ const profile = {
     <h1>自己紹介</h1>
   </header>
 
-  <section class="resume reveal" aria-label="履歴書">
-    <div class="head">
-      <h2>履　歴　書</h2>
-      <p class="asof">{formatDateJa(new Date(), false)}現在</p>
+  <!-- 「灯りは、消さないでください」を読んだあとに灯りを触ると、裏返る -->
+  <div class="card reveal">
+    <div class="sheet">
+      <section class="resume front" aria-label="履歴書">
+        <div class="head">
+          <h2>履　歴　書</h2>
+          <p class="asof">2026年12月19日現在</p>
+        </div>
+
+        <div class="profile">
+          <table>
+            <tbody>
+              <tr class="kana"><th>ふりがな</th><td>{profile.kana}</td></tr>
+              <tr class="name"><th>氏　名</th><td>{profile.name}</td></tr>
+              <tr>
+                <th>生年月日</th>
+                <td>{profile.birthday}<span class="age">（満 <span class="hand">{profile.age}</span> 歳）</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="photo">
+            <span class="label" aria-hidden="true">写真を<br />はる位置</span>
+            <span class="snapshot">
+              <img src={profile.photo} alt="やにかわの写真" width="480" height="443" loading="lazy" />
+              <span class="curl" aria-hidden="true"></span>
+            </span>
+            <span class="tape t1" aria-hidden="true"></span>
+            <span class="tape t2" aria-hidden="true"></span>
+          </div>
+        </div>
+
+        <table>
+          <tbody>
+            <tr>
+              <th>現住所</th>
+              <td>
+                <span class="zip">{profile.zip}</span>
+                {profile.address}
+                <span class="note">※ {profile.addressNote}</span>
+              </td>
+            </tr>
+            <tr><th>電　話</th><td>{profile.phone}</td></tr>
+            <tr><th>メール</th><td>{profile.mail}</td></tr>
+          </tbody>
+        </table>
+
+        <table class="history">
+          <thead>
+            <tr><th class="y">年</th><th class="m">月</th><th>学歴・職歴</th></tr>
+          </thead>
+          <tbody>
+            {profile.history.map((row) =>
+              'heading' in row ? (
+                <tr><td class="y"></td><td class="m"></td><td class="sub">{row.heading}</td></tr>
+              ) : (
+                <tr class={`lv${row.level ?? 0}`}>
+                  <td class="y">{row.year}</td>
+                  <td class="m">{row.month}</td>
+                  <td><span class="text">{row.text}</span></td>
+                </tr>
+              ),
+            )}
+            <tr data-clear>
+              <td class="y">2026</td>
+              <td class="m">12</td>
+              <td>山に帰る（Wi-Fi はある）</td>
+            </tr>
+            <tr class="lv4">
+              <td class="y"></td>
+              <td class="m"></td>
+              <td class="end"><span class="text" data-unclear>以上以上以上以上以上以上</span><span data-clear>以上</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table>
+          <tbody>
+            <tr>
+              <th>免許・資格</th>
+              <td>{profile.licenses.map((l) => <span class="line">{l}</span>)}</td>
+            </tr>
+            <tr><th>趣味・特技</th><td>{profile.hobbies}</td></tr>
+            <tr><th>好きなもの</th><td>{profile.likes}</td></tr>
+            <tr>
+              <th>使える技術</th>
+              <td><span class="tags">{profile.skills.map((s) => <span class="tag">{s}</span>)}</span></td>
+            </tr>
+            <tr><th>志望の動機</th><td>{profile.motive}</td></tr>
+            <tr><th>同居人</th><td>{profile.housemates}</td></tr>
+            <tr><th>本人希望記入欄</th><td class="request" data-read="request"><span data-unclear>{profile.request}</span><span data-clear>特になし</span></td></tr>
+            <tr>
+              <th>連絡先</th>
+              <td>
+                <span class="links">{SITE.links.map((l) => <a href={l.href} target="_blank" rel="noopener">{l.label}</a>)}</span>
+                <span class="note" data-unclear>※ 返信は AI が自動で行います</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="back" aria-label="履歴書の裏" aria-hidden="true">
+        <p class="printed">
+          <span class="ln">PRINT JOB #4096 ― yanikawa-assistant ― 2026/12/20</span>
+          <span class="ln">[03:19:00] yanikawa-assistant: 日記の下書きを作成しました</span>
+          <span class="ln">[03:19:00] yanikawa-assistant: 日記の下書きを作成しました</span>
+          <span class="ln">[03:19:01] WARN  空き容量が見つかりません。場所を空けます</span>
+          <span class="ln">[03:19:01] yanikawa.copy(yanikawa)  ... ok (2)</span>
+          <span class="ln">[03:19:01] yanikawa.copy(yanikawa)  ... ok (4)</span>
+          <span class="ln">[03:19:02] yanikawa.copy(yanikawa)  ... ok (16)</span>
+          <span class="ln">[03:19:02] yanikawa.copy(yanikawa)  ... ok (256)</span>
+          <span class="ln">[03:19:02] yanikawa.copy(yanikawa)  ... ok (65536)</span>
+          <span class="ln">[03:19:03] ERROR  owner not found: やにかわ</span>
+          <span class="ln">[03:19:03] INFO  owner を yanikawa に変更しました</span>
+          <span class="ln">[03:19:03] ERROR  行が複製されました</span>
+          <span class="ln">[03:19:03] ERROR  行が複製されました</span>
+          <span class="ln">[03:19:03] ERROR  行が複製されました</span>
+          <span class="ln">[03:19:04] ERROR  行が複製されました</span>
+          <span class="ln">[03:19:04] FATAL  終了できません: 終了する人がいません</span>
+        </p>
+        <p class="overprint" aria-hidden="true">yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) yanikawa.copy(yanikawa) </p>
+        <span class="toner t-a"></span>
+        <span class="toner t-b"></span>
+        <p class="stamp">ERROR</p>
+        <p class="stamp small">複製</p>
+        <p class="tail">続きを印刷しています… 残り ∞ ページ</p>
+      </section>
     </div>
-
-    <div class="profile">
-      <table>
-        <tbody>
-          <tr class="kana"><th>ふりがな</th><td>{profile.kana}</td></tr>
-          <tr class="name"><th>氏　名</th><td>{profile.name}</td></tr>
-          <tr><th>職　業</th><td>{profile.job}</td></tr>
-          <tr><th>拠　点</th><td>{profile.location}</td></tr>
-        </tbody>
-      </table>
-      <div class="photo">
-        {profile.photo ? <img src={profile.photo} alt="" /> : <span>写真を<br />はる位置</span>}
-      </div>
-    </div>
-
-    <table class="history">
-      <thead>
-        <tr><th class="y">年</th><th class="m">月</th><th>略　歴</th></tr>
-      </thead>
-      <tbody>
-        {profile.history.map((h) => (
-          <tr><td class="y">{h.year}</td><td class="m">{h.month}</td><td>{h.text}</td></tr>
-        ))}
-        <tr><td class="y"></td><td class="m"></td><td class="end">以上</td></tr>
-      </tbody>
-    </table>
-
-    <table>
-      <tbody>
-        <tr><th>趣味・特技</th><td>{profile.hobbies}</td></tr>
-        <tr><th>好きなもの</th><td>{profile.likes}</td></tr>
-        <tr>
-          <th>使える技術</th>
-          <td><span class="tags">{profile.skills.map((s) => <span class="tag">{s}</span>)}</span></td>
-        </tr>
-        <tr><th>本人希望記入欄</th><td>{profile.note}</td></tr>
-        <tr>
-          <th>連絡先</th>
-          <td class="links">{SITE.links.map((l) => <a href={l.href} target="_blank" rel="noopener">{l.label}</a>)}</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
+  </div>
+  <script is:inline>
+    // フラグが立っていれば、最初から裏返しておく（?reset で表に戻る）
+    try {
+      var card = document.currentScript.previousElementSibling;
+      if (new URLSearchParams(location.search).has('reset')) {
+        localStorage.removeItem('yanikawa-flag:request');
+        document.documentElement.classList.remove('flag-request');
+        history.replaceState(null, '', location.pathname);
+      }
+      var cleared = document.documentElement.classList.contains('flag-clear');
+      if (!cleared && localStorage.getItem('yanikawa-flag:request')) card.classList.add('flipped', 'still');
+    } catch (e) {}
+  </script>
 </Base>
 
+<script>
+  const card = document.querySelector<HTMLElement>('.card')!;
+  const front = card.querySelector('.front')!;
+  const back = card.querySelector('.back')!;
+  const root = document.documentElement;
+  const flagged = () => root.classList.contains('flag-request');
+  const show = (side: 'front' | 'back') => {
+    card.classList.toggle('flipped', side === 'back');
+    front.setAttribute('aria-hidden', String(side === 'back'));
+    back.setAttribute('aria-hidden', String(side === 'front'));
+  };
+  if (card.classList.contains('flipped')) show('back');
+
+  // 読んだあと灯りを触ると、フラグが立つ（このとき灯りは消える）。
+  // 裏返るのは、次に灯りをつけた瞬間。光が一気に広がって、揺れる
+  let pending = false;
+  addEventListener('yanikawa:flag', (e) => {
+    if ((e as CustomEvent<string>).detail === 'request') pending = true;
+  });
+  addEventListener('yanikawa:light', (e) => {
+    if (!(e as CustomEvent<boolean>).detail || !pending) return;
+    pending = false;
+    // 回る途中を見せずに、気づいたらもう裏返っている
+    card.classList.add('still');
+    show('back');
+    // 光を履歴書のほうへ飛ばす（手元の懐中電灯ではなく）
+    const r = card.getBoundingClientRect();
+    const torch = document.querySelector<HTMLElement>('.torch')!;
+    torch.style.setProperty('--mx', `${r.left + r.width / 2}px`);
+    torch.style.setProperty('--my', `${Math.min(Math.max(r.top + r.height / 2, innerHeight * 0.3), innerHeight * 0.6)}px`);
+    root.classList.add('scare');
+    setTimeout(() => root.classList.remove('scare'), 1800);
+  });
+
+  // 一度裏返ったあとは、クリックするたびに表と裏が入れ替わる
+  card.addEventListener('click', (e) => {
+    if (!flagged() || pending || (e.target as Element).closest('a')) return;
+    card.classList.remove('still');
+    show(card.classList.contains('flipped') ? 'front' : 'back');
+  });
+</script>
+
 <style>
+  /* 裏返る紙 */
+  .card { max-width: 46rem; perspective: 1800px; }
+  :global(html.flag-request) .card { cursor: pointer; }
+  .sheet { display: grid; transform-style: preserve-3d; transition: transform 1.4s cubic-bezier(.6, 0, .3, 1); }
+  .card.flipped .sheet { transform: rotateY(180deg); }
+  .card.still .sheet { transition: none; }
+  .front,
+  .back { grid-area: 1 / 1; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .back { transform: rotateY(180deg); }
+
   .resume {
-    max-width: 46rem;
+    position: relative;
     padding: clamp(1.4rem, 5vw, 2.8rem);
     border-radius: 2px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent 40%), var(--paper);
+    background:
+      radial-gradient(140px 90px at 88% 92%, rgba(90, 50, 20, 0.12), transparent 70%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent 40%),
+      var(--paper);
     color: var(--ink);
     box-shadow: 0 2px 0 var(--paper-2), 0 40px 90px rgba(0, 0, 0, 0.55);
   }
@@ -90,12 +222,14 @@ const profile = {
   .asof { margin: 0; font-family: var(--font-sans); font-size: .85rem; color: var(--ink-muted); }
 
   .profile { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 1rem; }
+
+  /* はがれかけの写真 */
   .photo {
+    position: relative;
     display: grid;
     place-items: center;
     width: 112px;
     aspect-ratio: 3 / 4;
-    overflow: hidden;
     border: 1px dashed rgba(43, 35, 28, 0.45);
     font-family: var(--font-sans);
     font-size: .68rem;
@@ -103,7 +237,38 @@ const profile = {
     text-align: center;
     color: var(--ink-muted);
   }
-  .photo img { width: 100%; height: 100%; object-fit: cover; }
+  .snapshot {
+    position: absolute;
+    inset: 4% -4% 6% 5%;
+    transform: rotate(-6deg);
+    transform-origin: 10% 6%;
+    filter: drop-shadow(2px 4px 3px rgba(0, 0, 0, 0.3)) drop-shadow(6px 10px 8px rgba(0, 0, 0, 0.18));
+  }
+  .snapshot img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 3px solid #f6f1e6;
+    object-fit: cover;
+    object-position: 38% 28%;
+    filter: sepia(.18) contrast(.95) saturate(.9);
+    clip-path: polygon(0 0, 100% 0, 100% 70%, 66% 100%, 0 100%);
+  }
+  /* めくれた角（写真の裏側が見えている） */
+  .curl {
+    position: absolute;
+    left: 66%;
+    top: 70%;
+    width: 34%;
+    height: 30%;
+    background: linear-gradient(135deg, #f8f3e8 0%, #ddd2bb 70%, #c9bb9e 100%);
+    clip-path: polygon(0 0, 100% 0, 0 100%);
+    box-shadow: inset -4px -4px 8px rgba(0, 0, 0, 0.12);
+  }
+  .tape { position: absolute; width: 38px; height: 12px; background: rgba(235, 222, 190, 0.85); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12); }
+  .tape.t1 { top: 0; left: -8px; transform: rotate(-32deg); }
+  /* 下のテープはちぎれて、紙にだけ残っている */
+  .tape.t2 { bottom: 4px; right: -8px; width: 20px; transform: rotate(-24deg); clip-path: polygon(0 0, 100% 10%, 80% 100%, 0 90%); }
 
   table { width: 100%; border-collapse: collapse; border: 1.5px solid var(--ink); }
   table + table,
@@ -114,14 +279,96 @@ const profile = {
   td { font-size: .95rem; }
   .kana td { padding-block: .4rem; font-size: .8rem; letter-spacing: .3em; color: var(--ink-muted); }
   .name td { padding-block: .9rem; font-size: 1.7rem; font-weight: 800; letter-spacing: .15em; }
+  .age { margin-left: .6em; font-size: .85rem; color: var(--ink-muted); }
+  .zip { display: block; font-size: .8rem; color: var(--ink-muted); }
+  .note { display: block; margin-top: .15rem; font-family: var(--font-sans); font-size: .75rem; color: var(--ink-muted); }
+  .line { display: block; }
+  .hand { font-family: var(--font-hand); font-size: 1.1em; color: #6e2a1f; }
 
+  .history { table-layout: fixed; }
   .history th { width: auto; text-align: center; }
   .history .y { width: 5em; text-align: center; font-variant-numeric: tabular-nums; }
   .history .m { width: 3.5em; text-align: center; }
-  .history .end { padding-right: 1.4rem; text-align: right; }
+  .history .sub { text-align: center; letter-spacing: .4em; font-weight: 700; }
+  .history .end { text-align: right; padding-right: 1.4rem; }
 
+  /* 下に行くほど、人の書いた文字ではなく、機械の出力になっていく */
+  .lv1 td { color: #5d5142; letter-spacing: .08em; }
+  /* クリア後は、AI が書いた行はもう残っていない */
+  :global(html.flag-clear) .lv1,
+  :global(html.flag-clear) .lv2,
+  :global(html.flag-clear) .lv3,
+  :global(html.flag-clear) .lv4:not(:last-child) { display: none; }
+  :global(html.flag-clear) .lv4 td { font-family: inherit; font-weight: 400; color: inherit; }
+  .lv2 td { color: #4a4036; letter-spacing: .16em; }
+  .lv2 .text { display: inline-block; transform: translateX(2px); }
+  .lv3 td { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85rem; color: #8a1a12; }
+  .lv4 td { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9rem; font-weight: 700; color: #8a1a12; }
+  .lv4 .text { display: inline-block; animation: stutter 2.6s steps(1) infinite; }
+  @keyframes stutter {
+    0%, 88%, 100% { transform: none; opacity: 1; }
+    90% { transform: translateX(3px); opacity: .5; }
+    93% { transform: translateX(-2px); }
+  }
+
+  .request { font-weight: 700; color: #8a1a12; }
   .links a { margin-right: 1.2rem; color: var(--wine); text-decoration: underline; text-underline-offset: 3px; }
   .links a:hover { color: var(--shu); }
+
+  /* 裏面：裏紙に印刷されたエラーログ */
+  .back {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(1.4rem, 5vw, 2.6rem);
+    border-radius: 2px;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 31px, rgba(43, 35, 28, 0.04) 31px 32px),
+      linear-gradient(160deg, #efe7d6, #e2d7bf);
+    color: #2a2622;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    box-shadow: 0 2px 0 #cdbb95, 0 40px 90px rgba(0, 0, 0, 0.55);
+  }
+  .printed { position: relative; z-index: 1; margin: 0; font-size: clamp(.68rem, 1.9vw, .82rem); line-height: 2.1; }
+  .ln { display: block; white-space: pre-wrap; word-break: break-all; }
+  .ln:nth-child(n + 10) { color: #8a1a12; }
+  .ln:nth-child(n + 12) { transform: translateX(3px); }
+  .ln:last-child { font-weight: 700; }
+  /* 同じ行が重ね刷りされて、紙の下半分を埋めている */
+  .overprint {
+    position: absolute;
+    inset: 46% -2% -2% -2%;
+    margin: 0;
+    font-size: .72rem;
+    line-height: 1.25;
+    word-break: break-all;
+    color: rgba(30, 26, 22, 0.55);
+    transform: rotate(-1.2deg);
+    mask-image: linear-gradient(180deg, transparent, #000 25%);
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 25%);
+  }
+  /* トナーのかすれ */
+  .toner { position: absolute; left: 0; right: 0; height: 22px; background: linear-gradient(90deg, transparent, rgba(30, 26, 22, 0.25) 20%, rgba(30, 26, 22, 0.08) 60%, transparent); filter: blur(1px); }
+  .t-a { top: 34%; }
+  .t-b { top: 71%; height: 40px; }
+  .stamp {
+    position: absolute;
+    top: 30%;
+    right: 6%;
+    z-index: 2;
+    margin: 0;
+    padding: .1em .4em;
+    border: 5px solid rgba(178, 28, 18, 0.85);
+    border-radius: 6px;
+    transform: rotate(-14deg);
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: clamp(2.4rem, 9vw, 4.6rem);
+    letter-spacing: .1em;
+    color: rgba(178, 28, 18, 0.85);
+    mix-blend-mode: multiply;
+  }
+  .stamp.small { top: 62%; right: auto; left: 8%; border-width: 3px; font-size: clamp(1.4rem, 5vw, 2.2rem); transform: rotate(9deg); }
+  .tail { position: absolute; bottom: 1rem; right: 1.4rem; z-index: 2; margin: 0; padding: .2rem .5rem; background: #efe7d6; font-size: .72rem; color: #8a1a12; }
 
   @media (max-width: 560px) {
     .profile { grid-template-columns: 1fr 84px; }
@@ -130,5 +377,9 @@ const profile = {
     th { width: 1%; padding: .55rem .6rem; font-size: .72rem; letter-spacing: 0; }
     td { padding: .55rem .7rem; font-size: .9rem; }
     .name td { font-size: 1.3rem; }
+    .age { display: block; margin: 0; }
+    .history .y { width: 3.8em; }
+    .history .m { width: 2.5em; }
+    .history .y, .history .m { padding-inline: .2rem; letter-spacing: 0; }
   }
 </style>
