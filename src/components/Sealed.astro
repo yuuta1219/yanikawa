@@ -1,0 +1,42 @@
+---
+import type { SealedPayload } from '../lib/unseal';
+import { SITE } from '../site.config';
+
+// 暗号化された中身の置き場。番号が合うと .sealed-body に中身が入る
+interface Props {
+  payload: SealedPayload;
+}
+const { payload } = Astro.props;
+---
+<div id="sealed" class="sealed" data-site={SITE.title}>
+  <div class="sealed-body">
+    <button type="button" class="keyhole" data-unlock aria-label="鍵をあける">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+        <circle cx="12" cy="8.8" r="3.8"></circle>
+        <path d="M10.2 12.2 8.8 19.5h6.4l-1.4-7.3"></path>
+      </svg>
+    </button>
+  </div>
+</div>
+<script type="application/json" id="sealed-data" is:inline set:html={JSON.stringify(payload)}></script>
+
+<style>
+  .sealed { min-height: 55vh; }
+  .keyhole {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    margin: 16vh auto 0;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--gold);
+    cursor: pointer;
+    transition: border-color .25s, box-shadow .25s;
+    animation: appear .6s .9s both;
+  }
+  .keyhole:hover { border-color: var(--gold); box-shadow: 0 0 24px rgba(209, 168, 90, 0.2); }
+  .sealed.is-open .sealed-body { animation: appear .7s ease both; }
+  @keyframes appear { from { opacity: 0; transform: translateY(8px); } }
+</style>

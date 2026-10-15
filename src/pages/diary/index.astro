@@ -1,0 +1,33 @@
+---
+import Base from '../../layouts/Base.astro';
+import DiaryList from '../../components/DiaryList.astro';
+import { getCollection } from 'astro:content';
+import { byDateDesc, published } from '../../utils';
+
+const entries = (await getCollection('diary', published)).sort(byDateDesc);
+
+// 年月ごとにまとめる
+const groups = new Map<string, typeof entries>();
+for (const e of entries) {
+  const key = `${e.data.date.getFullYear()}年${e.data.date.getMonth() + 1}月`;
+  if (!groups.has(key)) groups.set(key, []);
+  groups.get(key)!.push(e);
+}
+---
+<Base title="日記" description="日々のこと">
+  <header class="page-head">
+    <p class="kicker">Diary</p>
+    <h1>日記</h1>
+    <p class="lead">日々のこと。</p>
+  </header>
+
+  {[...groups].map(([month, list]) => (
+    <section>
+      <div class="section-head reveal">
+        <h2>{month}</h2>
+        <span class="meta">{list.length}件</span>
+      </div>
+      <div class="reveal"><DiaryList entries={list} /></div>
+    </section>
+  ))}
+</Base>

@@ -1,0 +1,134 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../site.config';
+import { formatDateJa } from '../utils';
+
+// ここを書き換えて、自分の履歴書にしてね
+const profile = {
+  kana: 'やにかわ',
+  name: SITE.author,
+  photo: '', // 写真を出すなら public/images/ に置いて '/images/me.jpg' のように書く
+  job: 'エンジニア',
+  location: '東京',
+  history: [
+    { year: 2024, month: 4, text: 'エンジニアとして働きはじめる' },
+    { year: 2026, month: 10, text: 'このサイトをひらく' },
+  ],
+  hobbies: '読書、夜の散歩、喫茶店めぐり',
+  likes: '古い映画、雨の音、濃いめのコーヒー',
+  skills: ['TypeScript', 'React', 'Ruby on Rails'],
+  note: 'お気軽にご連絡ください。',
+};
+---
+<Base title="自己紹介">
+  <header class="page-head">
+    <p class="kicker">About</p>
+    <h1>自己紹介</h1>
+  </header>
+
+  <section class="resume reveal" aria-label="履歴書">
+    <div class="head">
+      <h2>履　歴　書</h2>
+      <p class="asof">{formatDateJa(new Date(), false)}現在</p>
+    </div>
+
+    <div class="profile">
+      <table>
+        <tbody>
+          <tr class="kana"><th>ふりがな</th><td>{profile.kana}</td></tr>
+          <tr class="name"><th>氏　名</th><td>{profile.name}</td></tr>
+          <tr><th>職　業</th><td>{profile.job}</td></tr>
+          <tr><th>拠　点</th><td>{profile.location}</td></tr>
+        </tbody>
+      </table>
+      <div class="photo">
+        {profile.photo ? <img src={profile.photo} alt="" /> : <span>写真を<br />はる位置</span>}
+      </div>
+    </div>
+
+    <table class="history">
+      <thead>
+        <tr><th class="y">年</th><th class="m">月</th><th>略　歴</th></tr>
+      </thead>
+      <tbody>
+        {profile.history.map((h) => (
+          <tr><td class="y">{h.year}</td><td class="m">{h.month}</td><td>{h.text}</td></tr>
+        ))}
+        <tr><td class="y"></td><td class="m"></td><td class="end">以上</td></tr>
+      </tbody>
+    </table>
+
+    <table>
+      <tbody>
+        <tr><th>趣味・特技</th><td>{profile.hobbies}</td></tr>
+        <tr><th>好きなもの</th><td>{profile.likes}</td></tr>
+        <tr>
+          <th>使える技術</th>
+          <td><span class="tags">{profile.skills.map((s) => <span class="tag">{s}</span>)}</span></td>
+        </tr>
+        <tr><th>本人希望記入欄</th><td>{profile.note}</td></tr>
+        <tr>
+          <th>連絡先</th>
+          <td class="links">{SITE.links.map((l) => <a href={l.href} target="_blank" rel="noopener">{l.label}</a>)}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</Base>
+
+<style>
+  .resume {
+    max-width: 46rem;
+    padding: clamp(1.4rem, 5vw, 2.8rem);
+    border-radius: 2px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent 40%), var(--paper);
+    color: var(--ink);
+    box-shadow: 0 2px 0 var(--paper-2), 0 40px 90px rgba(0, 0, 0, 0.55);
+  }
+  .head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: .4rem 1rem; margin-bottom: 1.2rem; }
+  .head h2 { margin: 0; font-size: 1.7rem; letter-spacing: .3em; color: var(--ink); }
+  .asof { margin: 0; font-family: var(--font-sans); font-size: .85rem; color: var(--ink-muted); }
+
+  .profile { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 1rem; }
+  .photo {
+    display: grid;
+    place-items: center;
+    width: 112px;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    border: 1px dashed rgba(43, 35, 28, 0.45);
+    font-family: var(--font-sans);
+    font-size: .68rem;
+    line-height: 1.6;
+    text-align: center;
+    color: var(--ink-muted);
+  }
+  .photo img { width: 100%; height: 100%; object-fit: cover; }
+
+  table { width: 100%; border-collapse: collapse; border: 1.5px solid var(--ink); }
+  table + table,
+  .profile + table { margin-top: 1rem; }
+  th,
+  td { padding: .65rem .9rem; border: 1px solid rgba(43, 35, 28, 0.4); text-align: left; vertical-align: middle; }
+  th { width: 8em; background: rgba(43, 35, 28, 0.05); font-size: .82rem; font-weight: 700; white-space: nowrap; }
+  td { font-size: .95rem; }
+  .kana td { padding-block: .4rem; font-size: .8rem; letter-spacing: .3em; color: var(--ink-muted); }
+  .name td { padding-block: .9rem; font-size: 1.7rem; font-weight: 800; letter-spacing: .15em; }
+
+  .history th { width: auto; text-align: center; }
+  .history .y { width: 5em; text-align: center; font-variant-numeric: tabular-nums; }
+  .history .m { width: 3.5em; text-align: center; }
+  .history .end { padding-right: 1.4rem; text-align: right; }
+
+  .links a { margin-right: 1.2rem; color: var(--wine); text-decoration: underline; text-underline-offset: 3px; }
+  .links a:hover { color: var(--shu); }
+
+  @media (max-width: 560px) {
+    .profile { grid-template-columns: 1fr 84px; }
+    .photo { width: 84px; }
+    /* 項目名は折り返さず、文字の幅ぶんだけ取る */
+    th { width: 1%; padding: .55rem .6rem; font-size: .72rem; letter-spacing: 0; }
+    td { padding: .55rem .7rem; font-size: .9rem; }
+    .name td { font-size: 1.3rem; }
+  }
+</style>

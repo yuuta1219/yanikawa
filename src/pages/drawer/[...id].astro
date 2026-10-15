@@ -1,0 +1,21 @@
+---
+import Base from '../../layouts/Base.astro';
+import Sealed from '../../components/Sealed.astro';
+import '../../styles/manuscript.css';
+import { getCollection } from 'astro:content';
+import { published } from '../../utils';
+import { seal } from '../../lib/vault';
+import { neighbors, renderNovel } from '../../lib/drawer';
+
+export async function getStaticPaths() {
+  const all = await getCollection('novels', published);
+  return all.map((entry) => ({ params: { id: entry.id }, props: { entry, ...neighbors(all, entry) } }));
+}
+
+// 小説の本文。タイトルも含めてまるごと暗号化して埋め込む
+const { entry, prev, next } = Astro.props;
+const payload = await seal(renderNovel(entry, prev, next));
+---
+<Base title="引き出し" noindex>
+  <Sealed payload={payload} />
+</Base>

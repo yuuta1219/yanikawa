@@ -1,0 +1,244 @@
+---
+import { seal } from '../lib/vault';
+
+// どのページからでも番号を確かめられるよう、検証用の小さな暗号文を埋め込んでおく
+const verifier = await seal('ok');
+---
+<dialog id="lock" class="lock" data-href="/drawer/" aria-label="4桁の番号を入力">
+  <div class="pins">
+    {[0, 1, 2, 3].map(() => <span class="box" aria-hidden="true"></span>)}
+    <input
+      type="text"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      maxlength="4"
+      autocomplete="off"
+      enterkeyhint="done"
+      aria-label="4桁の番号"
+    />
+  </div>
+</dialog>
+<script type="application/json" id="lock-verifier" is:inline set:html={JSON.stringify(verifier)}></script>
+
+<script>
+  import { unseal, type SealedPayload } from '../lib/unseal';
+
+  const STORE_KEY = 'drawer-pin';
+  // 番号はタブを閉じるまでだけ覚えておく
+  const store = {
+    get: () => {
+      try {
+        return sessionStorage.getItem(STORE_KEY);
+      } catch {
+        return null;
+      }
+    },
+    set: (pin: string) => {
+      try {
+        sessionStorage.setItem(STORE_KEY, pin);
+      } catch {}
+    },
+    clear: () => {
+      try {
+        sessionStorage.removeItem(STORE_KEY);
+      } catch {}
+    },
+  };
+
+  const readPayload = (id: string): SealedPayload | null => {
+    const text = document.getElementById(id)?.textContent;
+    return text ? JSON.parse(text) : null;
+  };
+
+  const dialog = document.getElementById('lock') as HTMLDialogElement;
+  const input = dialog.querySelector('input')!;
+  const boxes = [...dialog.querySelectorAll<HTMLElement>('.box')];
+  const sealed = document.getElementById('sealed');
+  // 引き出しのページではその中身で、ほかのページでは検証用の暗号文で番号を確かめる
+  const payload = readPayload('sealed-data') ?? readPayload('lock-verifier');
+
+  async function tryOpen(pin: string) {
+    try {
+      return payload ? await unseal(payload, pin) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function reveal(html: string) {
+    if (!sealed) return;
+    const body = sealed.querySelector('.sealed-body')!;
+    body.innerHTML = html;
+    const title = body.querySelector<HTMLElement>('[data-title]')?.dataset.title;
+    if (title) document.title = `${title} ― ${sealed.dataset.site}`;
+    sealed.classList.add('is-open');
+  }
+
+  function paint() {
+    const n = input.value.length;
+    boxes.forEach((box, i) => {
+      box.classList.toggle('filled', i < n);
+      box.classList.toggle('active', i === n);
+    });
+  }
+
+  function openLock() {
+    input.value = '';
+    dialog.classList.remove('is-ok', 'is-ng', 'is-busy');
+    paint();
+    if (!dialog.open) dialog.showModal();
+    input.focus();
+  }
+
+  let busy = false;
+  input.addEventListener('input', async () => {
+    input.value = input.value.replace(/\D/g, '').slice(0, 4);
+    paint();
+    if (busy || input.value.length < 4) return;
+
+    busy = true;
+    dialog.classList.add('is-busy');
+    const pin = input.value;
+    const html = await tryOpen(pin);
+    dialog.classList.remove('is-busy');
+
+    if (html === null) {
+      dialog.classList.add('is-ng');
+      setTimeout(() => {
+        dialog.classList.remove('is-ng');
+        input.value = '';
+        paint();
+        busy = false;
+      }, 480);
+      return;
+    }
+
+    store.set(pin);
+    dialog.classList.add('is-ok');
+    setTimeout(() => {
+      if (sealed) {
+        reveal(html);
+        dialog.close();
+        busy = false;
+      } else {
+        location.href = dialog.dataset.href!;
+      }
+    }, 420);
+  });
+
+  // 枠の外をクリックしたら閉じる
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) dialog.close();
+  });
+
+  document.addEventListener('click', (e) => {
+    const target = e.target as Element;
+    if (target.closest('[data-drawer]') && !store.get()) {
+      e.preventDefault();
+      openLock();
+    } else if (target.closest('[data-unlock]')) {
+      openLock();
+    } else if (target.closest('[data-relock]')) {
+      store.clear();
+      location.href = '/';
+    }
+  });
+
+  if (sealed) {
+    // 同じタブで一度あけていれば、番号なしでそのまま開く
+    const pin = store.get();
+    (pin ? tryOpen(pin) : Promise.resolve(null)).then((html) => {
+      if (html !== null) {
+        reveal(html);
+      } else {
+        store.clear();
+        openLock();
+      }
+    });
+    // 鍵をかけたあと「戻る」で中身が見えてしまわないように
+    addEventListener('pageshow', (e) => {
+      if (e.persisted && !store.get()) location.reload();
+    });
+  }
+</script>
+
+<style>
+  .lock {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+  }
+  .lock[open] { display: grid; place-items: center; animation: lock-in .3s ease both; }
+  .lock::backdrop {
+    background: rgba(10, 8, 6, 0.8);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .pins { position: relative; display: flex; gap: 14px; }
+  .box {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 72px;
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    background: rgba(19, 16, 13, 0.75);
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .box.filled::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--paper); }
+  .pins:focus-within .box.active { border-color: var(--gold); }
+  .pins:focus-within .box.active::after {
+    content: '';
+    position: absolute;
+    width: 1.5px;
+    height: 28px;
+    background: var(--gold);
+    animation: caret 1s steps(1) infinite;
+  }
+
+  .lock.is-busy .box { border-color: rgba(209, 168, 90, 0.5); }
+  .lock.is-ok .box { border-color: var(--gold); box-shadow: 0 0 22px rgba(209, 168, 90, 0.3); }
+  .lock.is-ok .box.filled::before { background: var(--gold); }
+  .lock.is-ng .box { border-color: var(--shu); }
+  .lock.is-ng .pins { animation: shake .42s ease; }
+
+  /* 入力そのものは透明にして枠の上にかぶせる（スマホでも数字キーボードが出る） */
+  .pins input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    background: transparent;
+    color: transparent;
+    caret-color: transparent;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  :global(html:has(#lock[open])) { overflow: hidden; }
+
+  @keyframes lock-in { from { opacity: 0; } }
+  @keyframes caret { 50% { opacity: 0; } }
+  @keyframes shake {
+    20% { transform: translateX(-9px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(3px); }
+  }
+
+  @media (max-width: 400px) {
+    .pins { gap: 10px; }
+    .box { width: 50px; height: 64px; }
+  }
+</style>

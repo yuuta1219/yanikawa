@@ -1,0 +1,20 @@
+---
+import Base from '../../layouts/Base.astro';
+import Ticket from '../../components/Ticket.astro';
+import { getCollection } from 'astro:content';
+import { byDateDesc, published, ticketNumbers } from '../../utils';
+
+const all = await getCollection('apps', published);
+const numbers = ticketNumbers(all);
+const apps = [...all].sort(byDateDesc);
+---
+<Base title="アプリ" description="つくったアプリ">
+  <header class="page-head">
+    <p class="kicker">Works</p>
+    <h1>アプリ</h1>
+    <p class="lead">つくったものたち。</p>
+  </header>
+  <div class="tickets reveal">
+    {apps.map((a) => <Ticket app={a} no={numbers.get(a.id)} tags />)}
+  </div>
+</Base>

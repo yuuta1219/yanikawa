@@ -1,0 +1,74 @@
+/* 引き出しの中：原稿用紙（中身はあとから差し込まれるので、ここはグローバルに書く） */
+.manuscript {
+  --line-h: 2.3rem;
+  --pad: clamp(1.4rem, 6vw, 4.5rem);
+  position: relative;
+  max-width: 44rem;
+  margin: 1.5rem auto 0;
+  padding: calc(var(--pad) * .9) var(--pad) 3rem;
+  border-radius: 2px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent 35%),
+    linear-gradient(
+      to right,
+      transparent calc(var(--pad) - 14px),
+      var(--paper-rule) calc(var(--pad) - 14px),
+      var(--paper-rule) calc(var(--pad) - 13px),
+      transparent calc(var(--pad) - 13px)
+    ),
+    var(--paper);
+  color: var(--ink);
+  box-shadow: 0 2px 0 var(--paper-2), 0 40px 90px rgba(0, 0, 0, 0.6);
+}
+/* グラスを置いた跡 */
+.manuscript::before {
+  content: '';
+  position: absolute;
+  top: 1.4rem;
+  right: 1.6rem;
+  width: 130px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, transparent 56%, rgba(140, 80, 25, 0.14) 59%, rgba(140, 80, 25, 0.05) 64%, transparent 68%);
+  pointer-events: none;
+}
+/* 小さな焦げ跡 */
+.manuscript::after {
+  content: '';
+  position: absolute;
+  bottom: 2.2rem;
+  left: 2.4rem;
+  width: 20px;
+  height: 13px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(60, 35, 15, 0.45), rgba(120, 70, 25, 0.2) 55%, transparent 72%);
+  pointer-events: none;
+}
+
+.manuscript header { margin-bottom: 3rem; text-align: center; }
+.manuscript .series { margin: 0 0 .6rem; font-size: .9rem; letter-spacing: .2em; color: var(--shu); }
+.manuscript h1 { margin: 0; font-size: clamp(1.7rem, 5vw, 2.4rem); letter-spacing: .2em; color: var(--ink); }
+.manuscript .byline { margin: 1rem 0 0; font-size: .95rem; letter-spacing: .1em; color: var(--ink-muted); }
+
+/* 罫線の上に一行ずつ乗るように */
+.novel {
+  font-size: 1.08rem;
+  line-height: var(--line-h);
+  background-image: linear-gradient(to bottom, transparent calc(var(--line-h) - 1px), var(--paper-rule) calc(var(--line-h) - 1px));
+  background-size: 100% var(--line-h);
+}
+.novel p { margin: 0; text-indent: 1em; }
+.novel hr { height: var(--line-h); margin: 0; border: 0; text-align: center; }
+.novel hr::after { content: '＊'; color: var(--ink-muted); }
+.novel blockquote { margin: 0; padding-left: 1em; color: var(--ink-muted); }
+.novel strong { color: var(--ink); background: linear-gradient(transparent 70%, rgba(209, 168, 90, 0.45) 70%); }
+.novel a { color: var(--wine); text-decoration: underline; }
+.novel img { display: block; max-height: 60vh; margin: 0 auto; }
+
+.manuscript .date { margin: 2.5rem 0 0; text-align: right; font-size: .85rem; color: var(--ink-muted); }
+.manuscript + .pager { max-width: 44rem; margin-inline: auto; }
+
+@media (max-width: 560px) {
+  /* グラスの跡がタイトルにかからないよう、小さく隅へ */
+  .manuscript::before { top: .5rem; right: .5rem; width: 70px; }
+}

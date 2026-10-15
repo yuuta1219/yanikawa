@@ -1,0 +1,15 @@
+---
+import Base from '../../layouts/Base.astro';
+import Sealed from '../../components/Sealed.astro';
+import { getCollection } from 'astro:content';
+import { published } from '../../utils';
+import { seal } from '../../lib/vault';
+import { renderIndex } from '../../lib/drawer';
+
+// 引き出し（小説の目次）。中身は暗号化して埋め込む
+const novels = await getCollection('novels', published);
+const payload = await seal(renderIndex(novels));
+---
+<Base title="引き出し" noindex>
+  <Sealed payload={payload} />
+</Base>

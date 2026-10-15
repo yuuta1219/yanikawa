@@ -1,0 +1,53 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection, render } from 'astro:content';
+import { byDateDesc, formatDateJa, published } from '../../utils';
+
+export async function getStaticPaths() {
+  const all = (await getCollection('diary', published)).sort(byDateDesc);
+  return all.map((entry, i) => ({
+    params: { id: entry.id },
+    props: { entry, newer: all[i - 1], older: all[i + 1] },
+  }));
+}
+
+const { entry, newer, older } = Astro.props;
+const { Content } = await render(entry);
+const { title, date, weather } = entry.data;
+---
+<Base title={title}>
+  <div class="read">
+    <article>
+      <header class="entry-head">
+        <p class="date">
+          {formatDateJa(date)}
+          {weather && <span class="weather">{weather}</span>}
+        </p>
+        <h1>{title}</h1>
+      </header>
+      <div class="prose"><Content /></div>
+    </article>
+    <nav class="pager">
+      {older ? <a href={`/diary/${older.id}/`}>← {older.data.title}</a> : <span />}
+      <a href="/diary/">一覧へ</a>
+      {newer ? <a href={`/diary/${newer.id}/`}>{newer.data.title} →</a> : <span />}
+    </nav>
+  </div>
+</Base>
+
+<style>
+  .read { max-width: 40rem; margin: 1.5rem auto 0; }
+  .entry-head { margin-bottom: 2.8rem; padding-bottom: 1.6rem; border-bottom: 1px solid var(--line); }
+  .date {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    margin: 0 0 .5rem;
+    font-family: var(--font-sans);
+    font-size: .9rem;
+    letter-spacing: .1em;
+    color: var(--gold);
+  }
+  .weather { padding: 0 .55rem; border: 1px solid var(--line-strong); border-radius: 2px; font-size: .78rem; color: var(--muted); }
+  h1 { margin: 0; font-size: clamp(1.7rem, 5vw, 2.3rem); color: var(--paper); }
+</style>

@@ -1,0 +1,141 @@
+---
+import Base from '../layouts/Base.astro';
+import DiaryList from '../components/DiaryList.astro';
+import Ticket from '../components/Ticket.astro';
+import { getCollection } from 'astro:content';
+import { SITE } from '../site.config';
+import { byDateDesc, published, ticketNumbers } from '../utils';
+
+const diary = (await getCollection('diary', published)).sort(byDateDesc).slice(0, 5);
+const allApps = await getCollection('apps', published);
+const numbers = ticketNumbers(allApps);
+const apps = [...allApps].sort(byDateDesc).slice(0, 4);
+// 「、」のところで折り返して、縦書きの二行にする
+const verse = SITE.description.split(/(?<=、)/);
+---
+<Base>
+  <section class="hero">
+    <p class="verse">{verse.map((line) => <span>{line}</span>)}</p>
+    <div class="intro">
+      <h1 class="wordmark">{SITE.title}</h1>
+      <p class="lead">{SITE.intro}</p>
+      <p class="cta">
+        <a class="btn" href="/diary/">日記を読む</a>
+        <a class="btn ghost" href="/about/">自己紹介</a>
+      </p>
+    </div>
+    <div class="haze" aria-hidden="true">
+      <div class="smoke">
+        {Array.from({ length: 12 }, (_, i) => <span style={`--i:${i}`}></span>)}
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head reveal">
+      <h2>日記<span class="en">Diary</span></h2>
+      <a class="more" href="/diary/">すべて読む →</a>
+    </div>
+    <div class="reveal"><DiaryList entries={diary} /></div>
+  </section>
+
+  <section>
+    <div class="section-head reveal">
+      <h2>アプリ<span class="en">Works</span></h2>
+      <a class="more" href="/apps/">すべて見る →</a>
+    </div>
+    <div class="tickets reveal">
+      {apps.map((a) => <Ticket app={a} no={numbers.get(a.id)} />)}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: clamp(2rem, 8vw, 6.5rem);
+    min-height: min(70vh, 640px);
+    padding: 2.5rem 0 3rem;
+    isolation: isolate;
+  }
+
+  .verse {
+    margin: 0;
+    writing-mode: vertical-rl;
+    font-size: clamp(1.4rem, 2.6vw, 1.85rem);
+    font-weight: 700;
+    line-height: 1.7;
+    letter-spacing: .3em;
+    white-space: nowrap;
+    color: var(--paper);
+    text-shadow: 0 0 28px rgba(209, 168, 90, 0.2);
+  }
+  .verse span { display: block; }
+  .verse span + span { padding-top: 2.8em; color: var(--gold); }
+
+  .intro { position: relative; z-index: 1; }
+  .wordmark {
+    margin: 0 0 .35em;
+    padding: 0 .12em .08em 0;
+    font-family: var(--font-latin);
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(3.6rem, 12vw, 7.2rem);
+    line-height: 1;
+    letter-spacing: -.01em;
+    background: linear-gradient(175deg, #f6eedc 30%, #d9b46a 75%, #a87a35);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 6px 30px rgba(209, 168, 90, 0.18));
+  }
+  .lead { max-width: 30em; margin: 0 0 2.2rem; font-family: var(--font-sans); font-size: 1rem; line-height: 2; color: var(--muted); }
+  .cta { display: flex; flex-wrap: wrap; gap: .8rem; margin: 0; }
+
+  /* 立ちのぼる煙。画面幅の箱で切り取って、横にはみ出さないようにする */
+  .haze {
+    position: absolute;
+    top: -6rem;
+    bottom: 0;
+    left: calc(50% - 50vw);
+    right: calc(50% - 50vw);
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .smoke { position: absolute; right: 20%; bottom: -1rem; width: 1px; height: 1px; }
+  .smoke span {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 46px;
+    height: 70px;
+    margin-left: -23px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(225, 215, 198, 0.3), rgba(225, 215, 198, 0) 70%);
+    filter: blur(14px);
+    opacity: 0;
+    animation: rise 12s cubic-bezier(.3, .1, .6, 1) infinite;
+    animation-delay: calc(var(--i) * -1s);
+  }
+  .smoke span:nth-child(odd) { --sway: 36px; }
+  .smoke span:nth-child(even) { --sway: -40px; }
+  .smoke span:nth-child(3n) { --sway: 70px; }
+  .smoke span:nth-child(4n) { --sway: -15px; }
+  @keyframes rise {
+    0% { transform: translate(0, 0) scale(.4); opacity: 0; }
+    12% { opacity: .7; }
+    45% { transform: translate(var(--sway), -180px) scale(1.8); opacity: .45; }
+    100% { transform: translate(calc(var(--sway) * -0.6), -420px) scale(4); opacity: 0; }
+  }
+
+  @media (max-width: 680px) {
+    .hero { grid-template-columns: 1fr; gap: 1rem; min-height: auto; padding: 3.5rem 0 3rem; }
+    .verse { writing-mode: horizontal-tb; white-space: normal; font-size: 1rem; line-height: 1.8; letter-spacing: .14em; }
+    .verse span { display: inline; }
+    .verse span + span { padding-top: 0; }
+  }
+</style>

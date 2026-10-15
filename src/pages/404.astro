@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="ページが見つかりません">
+  <section class="lost">
+    <p class="code">404</p>
+    <h1>ページが見つかりませんでした</h1>
+    <p class="note">書きかけのまま、どこかへ行ってしまったようです。</p>
+    <p><a class="btn" href="/">トップへもどる</a></p>
+  </section>
+</Base>
+
+<style>
+  .lost { display: flex; flex-direction: column; justify-content: center; min-height: 60vh; }
+  .code { margin: 0; font-family: var(--font-latin); font-style: italic; font-size: 3.4rem; line-height: 1; color: var(--gold); }
+  h1 { margin: .6rem 0 .4rem; font-size: clamp(1.5rem, 5vw, 2rem); color: var(--paper); }
+  .note { margin: 0 0 2.2rem; font-family: var(--font-sans); color: var(--muted); }
+</style>
